@@ -1,0 +1,13 @@
+# 复制为 config.toml 或直接在 MaiBot WebUI 插件配置页修改；请勿将运行期 config.toml 提交到仓库。
+
+[plugin]
+config_version = "0.1.0"
+
+[network]
+base_url = "https://wiki.biligame.com/zzz"
+timeout_seconds = 15
+
+[result]
+max_chars = 1800
+max_candidates = 5
+cache_ttl_seconds = 600
