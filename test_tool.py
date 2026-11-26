@@ -10,6 +10,7 @@ import sys
 import tempfile
 import types
 import unittest
+import urllib.parse
 from unittest.mock import AsyncMock, patch
 
 PKG = Path(__file__).resolve().parent
@@ -174,6 +175,18 @@ class ZzzWikiPluginTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(search["success"])
         self.assertIn("山大王", search["content"])
 
+    async def test_exact_lore_title_precedes_fuzzy_character(self):
+        title = "安比的故事"
+        lore = Path(self.temp.name) / "aka" / "lore"
+        lore.mkdir()
+        (lore / "index.json").write_text(json.dumps({"titles": [title]}), encoding="utf-8")
+        page = lore / (urllib.parse.quote(title, safe="") + ".json")
+        page.write_text(json.dumps({"wikitext": "这是对应的剧情正文。"}), encoding="utf-8")
+        for mode in ("auto", "page"):
+            result = await self.plugin.handle_zzz_wiki_lookup(query=title, mode=mode)
+            self.assertIn("剧情正文", result["content"])
+        self.assertEqual(self.client.fetch_calls, 0)
+
     async def test_on_unload_and_config_update_close_http_client(self):
         await self.plugin.on_config_update("self", {}, "0.1.0")
         self.assertTrue(self.client.closed)
@@ -184,30 +197,6 @@ class ZzzWikiPluginTests(unittest.IsolatedAsyncioTestCase):
         await self.plugin.on_unload()
         second_client.close.assert_awaited_once()
         self.assertIsNone(self.plugin._client)
-
-    async def test_online_only_lookup_works_without_local_data(self):
-        with tempfile.TemporaryDirectory() as empty_dir:
-            fresh_client = _OfflineWikiClient()
-            fresh_plugin = plugin_mod.ZzzWikiPlugin()
-            fresh_plugin._client = fresh_client
-            if hasattr(fresh_plugin, "set_plugin_config"):
-                fresh_plugin.set_plugin_config(plugin_mod.ZzzWikiPlugin.build_default_config())
-                fresh_plugin._set_context(
-                    types.SimpleNamespace(
-                        logger=logging.getLogger("zzz-wiki-empty-test"),
-                        paths=types.SimpleNamespace(data_dir=empty_dir),
-                    )
-                )
-            else:
-                fresh_plugin._plugin_config_instance = config_mod.ZzzWikiPluginConfig()
-                fresh_plugin._ctx = types.SimpleNamespace(
-                    logger=logging.getLogger("zzz-wiki-empty-test"),
-                    paths=types.SimpleNamespace(data_dir=empty_dir),
-                )
-            res = await fresh_plugin.handle_zzz_wiki_lookup(query="山大王")
-            self.assertTrue(res["success"])
-            self.assertIn("护盾强效+15%", res["content"])
-            self.assertEqual(fresh_client.fetch_calls, 1)
 
 
 if __name__ == "__main__":

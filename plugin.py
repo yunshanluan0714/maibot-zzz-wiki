@@ -141,6 +141,9 @@ class ZzzWikiPlugin(MaiBotPlugin):
             self._cache.pop(oldest, None)
 
     def _lookup_local(self, query: str, base_url: str, limit: int) -> str | None:
+        exact = self._lookup_lore(query, base_url, limit, exact_only=True)
+        if exact:
+            return exact
         aka = self._get_aka()
         if aka is not None:
             try:
@@ -152,10 +155,13 @@ class ZzzWikiPlugin(MaiBotPlugin):
                 self.ctx.logger.info("zzz_wiki_lookup 本地命中: %s (dataset %s)", query, aka.built_at())
                 return local_text
 
+        return self._lookup_lore(query, base_url, limit, exact_only=False)
+
+    def _lookup_lore(self, query: str, base_url: str, limit: int, *, exact_only: bool) -> str | None:
         lore = self._get_lore()
         if lore is not None:
             try:
-                lore_title = lore.resolve(query)
+                lore_title = lore.resolve(query, exact_only=exact_only)
                 if lore_title:
                     lore_wikitext = lore.fetch(lore_title)
                     if lore_wikitext:

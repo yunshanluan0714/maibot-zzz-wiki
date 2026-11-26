@@ -101,7 +101,7 @@ class LoreStore:
                 break
         return out
 
-    def resolve(self, query: str) -> Optional[str]:
+    def resolve(self, query: str, *, exact_only: bool = False) -> Optional[str]:
         """查询词 → 词条标题（精确 → 剥后缀精确 → 子串包含选最短主词条）。"""
         if not self._ensure_loaded():
             return None
@@ -109,6 +109,8 @@ class LoreStore:
         for cand in cands:
             if cand in self._title_set:
                 return cand
+        if exact_only:
+            return None
         for cand in cands:
             if len(cand) < 2:
                 continue

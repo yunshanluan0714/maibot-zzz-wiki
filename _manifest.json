@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "id": "github.yunshanluan0714.zzz-wiki",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "plugin_type": "tool",
   "name": "绝区零维基",
   "description": "查询绝区零（Zenless Zone Zero）中文维基（B站维基）的角色属性、天赋、配装推荐、阵容搭配，以及驱动盘、音擎、怪物等词条，支持可选本地离线语料加速。",

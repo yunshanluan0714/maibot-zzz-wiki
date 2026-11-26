@@ -31,6 +31,13 @@ class WikitextParserTests(unittest.TestCase):
         raw = (Path(__file__).resolve().parent / "__init__.py").read_bytes()
         self.assertFalse(raw.startswith(b"\xef\xbb\xbf"))
 
+    def test_long_article_keeps_complete_source(self):
+        url = "https://example.com/guide"
+        summary = wikitext.build_summary("词条", "正文" * 400, url, 200)
+        self.assertLessEqual(len(summary), 200)
+        self.assertTrue(summary.endswith("来源：" + url))
+        self.assertIn("已截断", summary)
+
 
 class AkaDatasetTests(unittest.TestCase):
     def setUp(self):

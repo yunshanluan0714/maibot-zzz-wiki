@@ -284,8 +284,14 @@ def build_summary(title: str, wikitext: str, url: str, max_chars: int) -> str:
             fallback = clean_wikitext(wikitext)
             lines.append(fallback[:max_chars] if fallback else "这个词条没有可读正文。")
 
-    lines.append(f"来源：{url}")
+    source = f"来源：{url}"
+    if len(source) > max_chars:
+        return "来源链接过长，请提高返回字数上限。"[:max_chars]
     text = re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
-    if len(text) > max_chars:
-        text = text[: max_chars - 20].rstrip() + "\n…（已截断）"
-    return text
+    budget = max_chars - len(source) - 1
+    if len(text) > budget:
+        marker = "\n…（已截断）"
+        if budget <= len(marker):
+            return source
+        text = text[:budget - len(marker)].rstrip() + marker
+    return f"{text}\n{source}"
